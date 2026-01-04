@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Basic Calculator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .calculator-wrapper {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .calculator {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .display {
+      background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      text-align: right;
+    }
+
+    .history {
+      color: #a0aec0;
+      font-size: 16px;
+      min-height: 24px;
+      margin-bottom: 8px;
+      word-wrap: break-word;
+    }
+
+    .result {
+      color: #fff;
+      font-size: 48px;
+      font-weight: 300;
+      word-wrap: break-word;
+      line-height: 1.2;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .btn {
+      background: #f7fafc;
+      border: none;
+      border-radius: 12px;
+      padding: 24px;
+      font-size: 24px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #2d3748;
+    }
+
+    .btn:hover {
+      background: #edf2f7;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn.fun {
+      background: #fed7d7;
+      color: #c53030;
+    }
+
+    .btn.fun:hover {
+      background: #fc8181;
+      color: #fff;
+    }
+
+    .btn.op {
+      background: #bee3f8;
+      color: #2c5282;
+    }
+
+    .btn.op:hover {
+      background: #4299e1;
+      color: #fff;
+    }
+
+    .btn.equals {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+    }
+
+    .btn.equals:hover {
+      background: linear-gradient(135deg, #5568d3 0%, #63408b 100%);
+    }
+
+    .btn.wide {
+      grid-column: span 2;
+    }
+
+    .credits {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 14px;
+      margin-top: 20px;
+      font-weight: 300;
+    }
+
+    @media (max-width: 480px) {
+      .result {
+        font-size: 36px;
+      }
+      
+      .btn {
+        padding: 20px;
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="calculator-wrapper">
+    <div class="calculator">
+      <div class="display">
+        <div id="history" class="history"></div>
+        <div id="result" class="result">0</div>
+      </div>
+
+      <div class="buttons">
+        <button class="btn fun" data-action="clear">C</button>
+        <button class="btn fun" data-action="back">⌫</button>
+        <button class="btn fun" data-action="percent">%</button>
+        <button class="btn op" data-action="/">÷</button>
+
+        <button class="btn" data-value="7">7</button>
+        <button class="btn" data-value="8">8</button>
+        <button class="btn" data-value="9">9</button>
+        <button class="btn op" data-action="*">×</button>
+
+        <button class="btn" data-value="4">4</button>
+        <button class="btn" data-value="5">5</button>
+        <button class="btn" data-value="6">6</button>
+        <button class="btn op" data-action="-">−</button>
+
+        <button class="btn" data-value="1">1</button>
+        <button class="btn" data-value="2">2</button>
+        <button class="btn" data-value="3">3</button>
+        <button class="btn op" data-action="+">+</button>
+
+        <button class="btn wide" data-value="0">0</button>
+        <button class="btn" data-value=".">.</button>
+        <button class="btn equals" data-action="=">=</button>
+      </div>
+    </div>
+
+    
+  </main>
+
+  <script>
+    let current = '0';
+    let previous = '';
+    let operation = null;
+    let shouldResetDisplay = false;
+
+    const historyEl = document.getElementById('history');
+    const resultEl = document.getElementById('result');
+
+    function updateDisplay() {
+      resultEl.textContent = current;
+      if (previous && operation) {
+        historyEl.textContent = `${previous} ${getOperatorSymbol(operation)}`;
+      } else {
+        historyEl.textContent = '';
+      }
+    }
+
+    function getOperatorSymbol(op) {
+      const symbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+      return symbols[op] || op;
+    }
+
+    function appendNumber(num) {
+      if (shouldResetDisplay) {
+        current = num;
+        shouldResetDisplay = false;
+      } else {
+        if (num === '.' && current.includes('.')) return;
+        current = current === '0' && num !== '.' ? num : current + num;
+      }
+      updateDisplay();
+    }
+
+    function setOperation(op) {
+      if (operation !== null && !shouldResetDisplay) {
+        calculate();
+      }
+      previous = current;
+      operation = op;
+      shouldResetDisplay = true;
+      updateDisplay();
+    }
+
+    function calculate() {
+      if (operation === null || shouldResetDisplay) return;
+      
+      const prev = parseFloat(previous);
+      const curr = parseFloat(current);
+      
+      if (isNaN(prev) || isNaN(curr)) return;
+      
+      let result;
+      switch (operation) {
+        case '+':
+          result = prev + curr;
+          break;
+        case '-':
+          result = prev - curr;
+          break;
+        case '*':
+          result = prev * curr;
+          break;
+        case '/':
+          result = curr === 0 ? 'Error' : prev / curr;
+          break;
+        default:
+          return;
+      }
+      
+      current = result === 'Error' ? result : String(Math.round(result * 100000000) / 100000000);
+      operation = null;
+      previous = '';
+      shouldResetDisplay = true;
+      updateDisplay();
+    }
+
+    function clear() {
+      current = '0';
+      previous = '';
+      operation = null;
+      shouldResetDisplay = false;
+      updateDisplay();
+    }
+
+    function backspace() {
+      if (shouldResetDisplay) return;
+      current = current.length > 1 ? current.slice(0, -1) : '0';
+      updateDisplay();
+    }
+
+    function percent() {
+      current = String(parseFloat(current) / 100);
+      updateDisplay();
+    }
+
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const value = btn.dataset.value;
+        const action = btn.dataset.action;
+        
+        if (value !== undefined) {
+          appendNumber(value);
+        } else if (action) {
+          switch (action) {
+            case 'clear':
+              clear();
+              break;
+            case 'back':
+              backspace();
+              break;
+            case 'percent':
+              percent();
+              break;
+            case '=':
+              calculate();
+              break;
+            case '+':
+            case '-':
+            case '*':
+            case '/':
+              setOperation(action);
+              break;
+          }
+        }
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key >= '0' && e.key <= '9' || e.key === '.') {
+        appendNumber(e.key);
+      } else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+        setOperation(e.key);
+      } else if (e.key === 'Enter' || e.key === '=') {
+        e.preventDefault();
+        calculate();
+      } else if (e.key === 'Escape') {
+        clear();
+      } else if (e.key === 'Backspace') {
+        backspace();
+      } else if (e.key === '%') {
+        percent();
+      }
+    });
+
+    updateDisplay();
+  </script>
+</body>
+</html>
